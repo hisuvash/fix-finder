@@ -15,12 +15,10 @@ export default function LoginPage() {
 
   const handleLogin = () => {
     console.log("Login clicked", { email, password });
-    // TODO: call login API
   };
 
   const handleForgotPassword = () => {
     console.log("Forgot password clicked for:", email);
-    // TODO: route to forgot-password page or call API
   };
 
   return (
@@ -33,25 +31,27 @@ export default function LoginPage() {
           justifyContent: "center",
         }}
       >
+        {/* BLUE CARD */}
         <Box
           sx={{
             width: "100%",
             p: 4,
-            border: "1px solid #e0e0e0",
-            borderRadius: 2,
-            boxShadow: 1,
+            borderRadius: 3,
+            backgroundColor: "#2563eb", // blue theme
+            color: "white",
+            boxShadow: "0px 12px 30px rgba(37, 99, 235, 0.35)",
           }}
         >
           {/* Title */}
-          <Typography variant="h5" fontWeight={600} align="center" gutterBottom>
-            Login
+          <Typography variant="h5" fontWeight={700} align="center" gutterBottom>
+            Welcome To FixFinder
           </Typography>
 
           <Typography
             variant="body2"
             align="center"
-            color="text.secondary"
-            mb={2}
+            sx={{ opacity: 0.85 }}
+            mb={3}
           >
             Sign in to your account
           </Typography>
@@ -64,6 +64,11 @@ export default function LoginPage() {
             margin="normal"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            InputLabelProps={{ style: { color: "#1e3a8a" } }}
+            sx={{
+              backgroundColor: "white",
+              borderRadius: 1,
+            }}
           />
 
           {/* Password */}
@@ -74,6 +79,11 @@ export default function LoginPage() {
             margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            InputLabelProps={{ style: { color: "#1e3a8a" } }}
+            sx={{
+              backgroundColor: "white",
+              borderRadius: 1,
+            }}
           />
 
           {/* Forgot password */}
@@ -82,6 +92,7 @@ export default function LoginPage() {
               component="button"
               variant="body2"
               underline="hover"
+              sx={{ color: "#dbeafe" }}
               onClick={handleForgotPassword}
             >
               Forgot password?
@@ -90,20 +101,35 @@ export default function LoginPage() {
 
           {/* Login button */}
           <Button
-            variant="contained"
             fullWidth
-            sx={{ mt: 3 }}
             onClick={handleLogin}
+            sx={{
+              mt: 3,
+              py: 1.2,
+              fontWeight: 700,
+              backgroundColor: "#1e40af",
+              color: "white",
+              borderRadius: 2,
+              boxShadow: "0px 6px 16px rgba(30, 64, 175, 0.45)",
+              "&:hover": {
+                backgroundColor: "#1d4ed8",
+              },
+            }}
           >
             Login
           </Button>
 
-          <Divider sx={{ my: 3 }} />
+          <Divider
+            sx={{
+              my: 3,
+              borderColor: "rgba(255,255,255,0.3)",
+            }}
+          />
 
-          {/* Optional footer */}
-          <Typography variant="body2" align="center" color="text.secondary">
+          {/* Footer */}
+          <Typography variant="body2" align="center" sx={{ opacity: 0.9 }}>
             Don’t have an account?{" "}
-            <Link underline="hover" sx={{ cursor: "pointer" }}>
+            <Link underline="hover" sx={{ color: "#bfdbfe", fontWeight: 600 }}>
               Sign up
             </Link>
           </Typography>

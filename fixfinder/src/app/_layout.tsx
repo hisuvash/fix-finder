@@ -1,6 +1,6 @@
 import { Stack, usePathname, router } from "expo-router";
 import React, { useEffect } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text, View, Image } from "react-native";
 import { AuthProvider, useAuth } from "../shared/auth/AuthContext";
 
 
@@ -43,30 +43,57 @@ function AppHeader() {
         shadowRadius: 4,
       }}
     >
-     <Text style={{ fontWeight: "700", color: "white", fontSize: 18 }}>
-      FixFinder </Text>
+      <Pressable
+          onPress={() => router.push("/")}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <Image
+            source={require("../../assets/images/logo.png")}
+            style={{
+              width: 32,
+              height: 32,
+              resizeMode: "contain",
+            }}
+          />
+          <Text
+            style={{
+              fontWeight: "700",
+              color: "white",
+              fontSize: 18,
+            }}
+          >
+            FixFinder
+          </Text>
+        </Pressable>
 
       <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
         {navItems.map((item) => {
           const active = pathname === item.href;
           return (
             <Pressable key={item.href} onPress={() => handleNav(item.href)}>
-              <Text style={{ fontWeight: active ? "700" : "500" }}>
+              <Text style={{
+                 fontWeight: active ? "700" : "500",
+                  color: "white",              // ✅ ADD THIS
+                }}>
                 {item.label}
               </Text>
             </Pressable>
           );
         })}
 
-        {!isLoggedIn ? (
-          <Pressable onPress={() => router.push("/login")}>
-            <Text style={{ fontWeight: "700" }}>Login</Text>
-          </Pressable>
-        ) : (
-          <Pressable onPress={logout}>
-            <Text style={{ fontWeight: "700" }}>Logout</Text>
-          </Pressable>
-        )}
+    {!isLoggedIn ? (
+      <Pressable onPress={() => router.push("/login")}>
+        <Text style={{ fontWeight: "700", color: "white" }}>Login</Text>
+      </Pressable>
+    ) : (
+      <Pressable onPress={logout}>
+        <Text style={{ fontWeight: "700", color: "white" }}>Logout</Text>
+      </Pressable>
+    )}
       </View>
     </View>
   );
