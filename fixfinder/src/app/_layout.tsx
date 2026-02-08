@@ -52,10 +52,10 @@ function AppHeader() {
           }}
         >
           <Image
-            source={require("../../assets/images/logo.png")}
+            source={require("../../assets/images/logo.jpeg")}
             style={{
-              width: 32,
-              height: 32,
+              width: 152,
+              height: 52,
               resizeMode: "contain",
             }}
           />
@@ -66,7 +66,7 @@ function AppHeader() {
               fontSize: 18,
             }}
           >
-            FixFinder
+            
           </Text>
         </Pressable>
 
