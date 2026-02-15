@@ -42,3 +42,5 @@ project-root/
 
 
 npx expo start -c
+
+npx nodemon server.js

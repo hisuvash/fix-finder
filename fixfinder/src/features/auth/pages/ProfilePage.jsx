@@ -66,7 +66,7 @@ export default function ProfilePage() {
       ) : user ? (
         <View style={styles.card}>
           <Text style={styles.title}>Profile</Text>
-          <Text style={styles.subtitle}>Loaded from MongoDB</Text>
+          <Text style={styles.subtitle}>User Profile</Text>
 
           <View style={styles.divider} />
 
