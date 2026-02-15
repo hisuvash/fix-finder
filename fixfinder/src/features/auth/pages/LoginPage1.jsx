@@ -1,7 +1,5 @@
-import React, { useState } from "react";
-import { router, useLocalSearchParams } from "expo-router";
-import { useAuth } from "../../../shared/auth/AuthContext";
-import { API_BASE_URL } from "../../../shared/config/api";
+import { useState } from "react";
+import { router } from "expo-router";
 import {
   Box,
   Button,
@@ -12,20 +10,17 @@ import {
   Divider,
 } from "@mui/material";
 
-export default function LoginPage() {
-  const params = useLocalSearchParams(); // ?redirect=/profile
-  const { login } = useAuth();
+const API_BASE_URL = "http://localhost:5000";
 
-  const [email, setEmail] = useState("mesuvash@hotmail.com");
-  const [password, setPassword] = useState("11111111");
+export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleLogin = async () => {
     setErrorMsg("");
-
-    const cleanEmail = email.trim().toLowerCase();
-    if (!cleanEmail || !password) {
+    if (!email.trim() || !password) {
       setErrorMsg("Please enter email and password.");
       return;
     }
@@ -36,24 +31,17 @@ export default function LoginPage() {
       const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: cleanEmail, password }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
-
       if (!res.ok) throw new Error(data?.message || "Login failed");
-      if (!data?.token) throw new Error("Token not received from server.");
 
-      // ✅ update context + persist token
-      await login(data.token);
-
-      const redirectTo =
-        typeof params.redirect === "string" ? params.redirect : "/profile";
-
-      // ✅ one tick delay prevents guard race conditions
-      setTimeout(() => {
-        router.replace(redirectTo);
-      }, 0);
+      localStorage.setItem("ff_token", data.token);
+      router.replace("/profile");
     } catch (e) {
       setErrorMsg(e?.message || "Login failed");
     } finally {
@@ -134,7 +122,7 @@ export default function LoginPage() {
             Don’t have an account?{" "}
             <Link
               underline="hover"
-              sx={{ color: "#bfdbfe", fontWeight: 600, cursor: "pointer" }}
+              sx={{ color: "#bfdbfe", fontWeight: 600 }}
               onClick={() => router.push("/register")}
             >
               Sign up
