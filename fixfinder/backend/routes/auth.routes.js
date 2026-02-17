@@ -2,7 +2,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-
+const auth = require("../controller/authController");
 const router = express.Router();
 
 function signToken(user) {
@@ -167,5 +167,8 @@ router.put("/me", requireAuth, async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
+
+router.post("/forgot-password", auth.forgotPassword);
+router.post("/reset-password", auth.resetPassword);
 
 module.exports = router;

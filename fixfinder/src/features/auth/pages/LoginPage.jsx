@@ -11,6 +11,9 @@ import {
   Link,
   Divider,
 } from "@mui/material";
+import {
+  Dialog, DialogTitle, DialogContent, DialogActions
+} from "@mui/material";
 
 export default function LoginPage() {
   const params = useLocalSearchParams(); // ?redirect=/profile
@@ -20,7 +23,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("11111111");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
+//////////////////// forgot password states
+  const [fpOpen, setFpOpen] = useState(false);
+  const [fpEmail, setFpEmail] = useState("");
+  const [fpLoading, setFpLoading] = useState(false);
+  const [fpMsg, setFpMsg] = useState("");
+//////////////////////////
   const handleLogin = async () => {
     setErrorMsg("");
 
@@ -60,6 +68,30 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  const handleForgotPassword = async () => {
+ 
+  setFpMsg("");
+  const clean = fpEmail.trim().toLowerCase();
+  if (!clean) return setFpMsg("Please enter your email.");
+
+  try {
+    alert("I am sending reset link");
+    setFpLoading(true);
+    const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: clean }),
+    });
+    alert("here is the link:", res);
+    const data = await res.json().catch(() => ({}));
+    setFpMsg(data?.message || "If that email exists, a reset link has been sent.");
+  } catch {
+    setFpMsg("Something went wrong. Please try again.");
+  } finally {
+    setFpLoading(false);
+  }
+};
 
   return (
     <Container maxWidth="sm">
@@ -109,6 +141,19 @@ export default function LoginPage() {
             InputLabelProps={{ style: { color: "#1e3a8a" } }}
             sx={{ backgroundColor: "white", borderRadius: 1 }}
           />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+        <Link
+          underline="hover"
+          sx={{ color: "#bfdbfe", fontWeight: 600, cursor: "pointer" }}
+          onClick={() => {
+            setFpEmail(email || "");
+            setFpMsg("");
+            setFpOpen(true);
+          }}
+        >
+          Forgot password?
+        </Link>
+      </Box>
 
           <Button
             fullWidth
@@ -142,6 +187,29 @@ export default function LoginPage() {
           </Typography>
         </Box>
       </Box>
+      <Dialog open={fpOpen} onClose={() => setFpOpen(false)}>
+  <DialogTitle>Reset Password</DialogTitle>
+  <DialogContent>
+    <Typography variant="body2" sx={{ mb: 1 }}>
+      Enter your email and we’ll send a password reset link.
+    </Typography>
+    <TextField
+      label="Email"
+      type="email"
+      fullWidth
+      margin="dense"
+      value={fpEmail}
+      onChange={(e) => setFpEmail(e.target.value)}
+    />
+    {fpMsg ? <Typography sx={{ mt: 1 }}>{fpMsg}</Typography> : null}
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => {setFpOpen(false); alert("sending link")}}>Cancel</Button>
+    <Button disabled={fpLoading} onClick={handleForgotPassword}>
+      {fpLoading ? "Sending..." : "OK"}
+    </Button>
+  </DialogActions>
+</Dialog>
     </Container>
   );
 }
