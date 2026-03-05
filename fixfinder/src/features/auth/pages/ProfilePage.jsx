@@ -8,6 +8,8 @@ export default function ProfilePage() {
   const { token, isLoggedIn, loading: authLoading } = useAuth();
 
   const [user, setUser] = useState(null);
+  const [handyManInfoExists, setHandyManInfoExists] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -24,7 +26,8 @@ export default function ProfilePage() {
         setLoading(true);
         setErrorMsg("");
 
-        const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        // ✅ Use the new endpoint that includes handyManInfoExists
+        const res = await fetch(`${API_BASE_URL}/api/auth/me-with-handyman`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -38,6 +41,7 @@ export default function ProfilePage() {
         if (!res.ok) throw new Error(data?.message || "Failed to load profile");
 
         setUser(data.user);
+        setHandyManInfoExists(!!data.handyManInfoExists);
       } catch (e) {
         console.log("PROFILE LOAD ERROR:", e);
         setErrorMsg(e?.message || "Failed to load profile");
@@ -59,6 +63,8 @@ export default function ProfilePage() {
     );
   }
 
+  const isHandyman = user?.userType === "Handyman";
+
   return (
     <View style={styles.centerScreen}>
       {errorMsg ? (
@@ -78,7 +84,26 @@ export default function ProfilePage() {
           <Text style={styles.row}><Text style={styles.bold}>State/Province: </Text>{user.stateProvince}</Text>
           <Text style={styles.row}><Text style={styles.bold}>City: </Text>{user.city}</Text>
 
-          {/* ✅ Edit button */}
+          {/* ✅ Handyman: Add/Edit Skills button */}
+          {isHandyman ? (
+            !handyManInfoExists ? (
+              <Pressable
+                style={[styles.button, styles.skillsButton]}
+                onPress={() => router.push("/add-skills")}
+              >
+                <Text style={styles.buttonText}>Add Skills</Text>
+              </Pressable>
+            ) : (
+              <Pressable
+                style={[styles.button, styles.skillsButton]}
+                onPress={() => router.push("/edit-skills")}
+              >
+                <Text style={styles.buttonText}>Edit Skills</Text>
+              </Pressable>
+            )
+          ) : null}
+
+          {/* ✅ Edit Profile button (same as your working code) */}
           <Pressable style={styles.button} onPress={() => router.push("/edit-profile")}>
             <Text style={styles.buttonText}>Edit Profile</Text>
           </Pressable>
@@ -123,6 +148,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#1e40af",
     paddingVertical: 12,
     borderRadius: 12,
+  },
+  // ✅ Slightly different color for skills button (optional)
+  skillsButton: {
+    backgroundColor: "#0f766e",
+    marginTop: 12,
   },
   buttonText: { color: "white", fontWeight: "700", textAlign: "center", fontSize: 16 },
 });

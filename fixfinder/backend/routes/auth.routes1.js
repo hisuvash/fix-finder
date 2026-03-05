@@ -5,9 +5,6 @@ const User = require("../models/User");
 const auth = require("../controller/authController");
 const router = express.Router();
 
-// ✅ NEW: HandyManInfo model (added for handyman skill feature)
-const HandyManInfo = require("../models/HandyManInfo");
-
 function signToken(user) {
   return jwt.sign(
     { userId: user._id, email: user.email, userType: user.userType },
@@ -17,7 +14,7 @@ function signToken(user) {
 }
 
 function requireAuth(req, res, next) {
-  console.log("AUTH MIDDLEWARE called. Authorization header:");
+    console.log("AUTH MIDDLEWARE called. Authorization header:");
   try {
     const header = req.headers.authorization || "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : null;
@@ -117,7 +114,7 @@ router.post("/login", async (req, res) => {
 
 // ✅ PROFILE (current user)
 router.get("/me", requireAuth, async (req, res) => {
-  console.log("PROFILE /me called by user:");
+    console.log("PROFILE /me called by user:");
   try {
     console.log("PROFILE /me called by user:", req.user);
     const user = await User.findById(req.user.userId);
@@ -129,7 +126,6 @@ router.get("/me", requireAuth, async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
-
 // ✅ UPDATE PROFILE (current user) - email NOT editable
 router.put("/me", requireAuth, async (req, res) => {
   try {
@@ -153,6 +149,7 @@ router.put("/me", requireAuth, async (req, res) => {
     };
 
     // ✅ important: do NOT allow email update
+    // (ignore req.body.email even if frontend sends it)
 
     const user = await User.findByIdAndUpdate(req.user.userId, update, {
       new: true,
@@ -170,150 +167,6 @@ router.put("/me", requireAuth, async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 });
-
-/* ============================================================
-   ✅ NEW CODE ADDED BELOW (Handyman Skills / HandyManInfo)
-   ============================================================ */
-
-// ✅ OPTIONAL: One endpoint to help Profile decide whether to show Add/Edit button
-// GET /api/auth/me-with-handyman
-router.get("/me-with-handyman", requireAuth, async (req, res) => {
-    console.log("I came to check skills table for ", req.user.email);
-  try {
-    const user = await User.findById(req.user.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    let handyManInfoExists = false;
-    if (user.userType === "Handyman") {
-      const hm = await HandyManInfo.findOne({ email: user.email });
-      handyManInfoExists = !!hm;
-    }
-
-    return res.status(200).json({
-      user: safeUser(user),
-      handyManInfoExists,
-    });
-  } catch (err) {
-    console.error("ME WITH HANDYMAN ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
-  }
-});
-
-// Helper: handyman-only access (uses JWT userType)
-function requireHandyman(req, res, next) {
-  if (req.user?.userType !== "Handyman") {
-    return res.status(403).json({ message: "Only Handyman users can access this." });
-  }
-  next();
-}
-
-// ✅ GET current handyman info (if exists)
-// GET /api/auth/handyman-info/me
-router.get("/api/handyman-info/me",  requireHandyman, async (req, res) => {
-    console.log("Did i come bere to get handiman info", req);
-  try {
-    const email = String(req.user.email || "").trim().toLowerCase();
-    const info = await HandyManInfo.findOne({ email });
-
-    return res.status(200).json({ info: info || null });
-  } catch (err) {
-    console.error("GET HANDYMAN INFO ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
-  }
-});
-
-// ✅ CREATE handyman info (only if no record exists)
-// POST /api/auth/handyman-info
-router.post("/handyman-info", requireAuth, requireHandyman, async (req, res) => {
-    console.log("POST coming to create handyman", req.user.email);
-  try {
-    const email = String(req.user.email || "").trim().toLowerCase();
-
-    const exists = await HandyManInfo.findOne({ email });
-    if (exists) {
-      return res.status(409).json({ message: "Handyman info already exists. Use edit instead." });
-    }
-
-    const {
-      name,
-      phone,
-      skill,
-      ratePerHour,
-      distanceKm,
-      experienceYears,
-      license,
-      certifications,
-    } = req.body;
-
-    if (!name || !phone || !skill) {
-      return res.status(400).json({ message: "name, phone, and skill are required." });
-    }
-
-    const doc = await HandyManInfo.create({
-      email,
-      name: String(name).trim(),
-      phone: String(phone).trim(),
-      skill: String(skill).trim(),
-      ratePerHour: Number(ratePerHour || 0),
-      distanceKm: Number(distanceKm || 0),
-      experienceYears: Number(experienceYears || 0),
-      license: license ? String(license).trim() : "",
-      certifications: certifications ? String(certifications).trim() : "",
-    });
-
-    return res.status(201).json({ message: "Saved", info: doc });
-  } catch (err) {
-    console.error("CREATE HANDYMAN INFO ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
-  }
-});
-
-// ✅ UPDATE handyman info (email + phone NOT editable)
-// PUT /api/auth/handyman-info
-router.put("/handyman-info", requireAuth, requireHandyman, async (req, res) => {
-  try {
-    const email = String(req.user.email || "").trim().toLowerCase();
-
-    const existing = await HandyManInfo.findOne({ email });
-    if (!existing) {
-      return res.status(404).json({ message: "No handyman info found to update." });
-    }
-
-    const {
-      name,
-      skill,
-      ratePerHour,
-      distanceKm,
-      experienceYears,
-      license,
-      certifications,
-    } = req.body;
-
-    if (!name || !skill) {
-      return res.status(400).json({ message: "name and skill are required." });
-    }
-
-    // ✅ do NOT allow changing email or phone
-    existing.name = String(name).trim();
-    existing.skill = String(skill).trim();
-    existing.ratePerHour = Number(ratePerHour || 0);
-    existing.distanceKm = Number(distanceKm || 0);
-    existing.experienceYears = Number(experienceYears || 0);
-    existing.license = license ? String(license).trim() : "";
-    existing.certifications = certifications ? String(certifications).trim() : "";
-
-    await existing.save();
-
-    return res.status(200).json({ message: "Updated", info: existing });
-  } catch (err) {
-    console.error("UPDATE HANDYMAN INFO ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
-  }
-});
-
-/* ============================================================
-   ✅ Existing password reset routes (already in your code)
-   ============================================================ */
 
 router.post("/forgot-password", auth.forgotPassword);
 router.post("/reset-password", auth.resetPassword);
