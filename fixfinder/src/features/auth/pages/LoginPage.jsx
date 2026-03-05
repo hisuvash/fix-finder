@@ -76,14 +76,14 @@ export default function LoginPage() {
   if (!clean) return setFpMsg("Please enter your email.");
 
   try {
-    alert("I am sending reset link");
+    // alert("I am sending reset link");
     setFpLoading(true);
     const res = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: clean }),
     });
-    alert("here is the link:", res);
+    // alert("here is the link:", res);
     const data = await res.json().catch(() => ({}));
     setFpMsg(data?.message || "If that email exists, a reset link has been sent.");
   } catch {
