@@ -107,6 +107,13 @@ export default function ProfilePage() {
           <Pressable style={styles.button} onPress={() => router.push("/edit-profile")}>
             <Text style={styles.buttonText}>Edit Profile</Text>
           </Pressable>
+
+          {/* ✅ List Handyman button - only for non-handymen */}
+          {!isHandyman && (
+            <Pressable style={[styles.button, styles.listButton]} onPress={() => router.push("/list-handymen")}>
+              <Text style={styles.buttonText}>List Handymen</Text>
+            </Pressable>
+          )}
         </View>
       ) : (
         <Text style={styles.text}>No user found.</Text>
@@ -152,6 +159,10 @@ const styles = StyleSheet.create({
   // ✅ Slightly different color for skills button (optional)
   skillsButton: {
     backgroundColor: "#0f766e",
+    marginTop: 12,
+  },
+  listButton: {
+    backgroundColor: "#7c3aed",
     marginTop: 12,
   },
   buttonText: { color: "white", fontWeight: "700", textAlign: "center", fontSize: 16 },

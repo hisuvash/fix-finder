@@ -135,4 +135,15 @@ router.put("/", auth, requireHandyman, async (req, res) => {
 //   }
 // });
 
+// GET /api/handyman-info/all (list all handymen, excluding phone and email)
+router.get("/all", auth, async (req, res) => {
+  try {
+    const handymen = await HandyManInfo.find({}, '-phone -email');
+    return res.json({ handymen });
+  } catch (err) {
+    console.error("GET handyman-info/all error:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
 module.exports = router;
