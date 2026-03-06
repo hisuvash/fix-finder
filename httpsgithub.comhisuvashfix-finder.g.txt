@@ -1,0 +1,16 @@
+https://github.com/hisuvash/fix-finder.git -b login
+
+
+-----client--------
+Get inside fix-finder/fixfinder folder
+
+npm install
+
+npx expo start -c
+
+------server---------
+
+get inside fix-finder\fixfinder\backend
+
+npx nodemon server.js
+
