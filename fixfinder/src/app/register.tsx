@@ -16,7 +16,7 @@ const COUNTRY_STATE: Record<string, string[]> = {
 // - Android emulator: "http://10.0.2.2:5000"
 // - iOS simulator: "http://localhost:5000"
 // - Physical phone: "http://YOUR_LAPTOP_IP:5000" (same Wi-Fi)
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "http://localhost:5001";
 
 export default function RegisterScreen() {
   // form state

@@ -6,7 +6,7 @@ import { Box, Button, Container, Typography, Divider } from "@mui/material";
 // - Expo Web: http://localhost:5000
 // - Android emulator: http://10.0.2.2:5000
 // - Physical phone: http://YOUR_PC_IP:5000
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "http://localhost:5001";
 
 export default function ProfilePage() {
   const [user, setUser] = useState(null);

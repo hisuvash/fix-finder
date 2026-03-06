@@ -10,7 +10,7 @@ import {
   Divider,
 } from "@mui/material";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "http://localhost:5001";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");

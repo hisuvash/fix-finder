@@ -8,11 +8,13 @@ const userRoutes = require("./routes/user.routes");
 const app = express();
 const corsOptions = {
   origin: [
-    "http://localhost:5000",   // Web frontend
-    "http://localhost:8081",   // Expo/React Native
+    "http://localhost:5001",
+    "http://localhost:8081",
   ],
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
@@ -23,7 +25,7 @@ app.get("/", (req, res) => res.send("FixFinder API running ✅"));
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 connectDB()
   .then(() => {

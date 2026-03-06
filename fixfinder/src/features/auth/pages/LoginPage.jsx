@@ -95,27 +95,26 @@ export default function LoginPage() {
 
   return (
     <Container maxWidth="sm">
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", py: 3, marginTop: "-100px" }}>
         <Box
           sx={{
             width: "100%",
             p: 4,
-            borderRadius: 3,
-            backgroundColor: "#2563eb",
-            color: "white",
-            boxShadow: "0px 12px 30px rgba(37, 99, 235, 0.35)",
+            borderRadius: 2,
+            backgroundColor: "#FFFFFF",
+            boxShadow: "0 6px 20px rgba(0, 0, 0, 0.1)",
           }}
         >
-          <Typography variant="h5" fontWeight={700} align="center" gutterBottom>
+          <Typography variant="h5" fontWeight={700} align="center" gutterBottom sx={{ color: "#263c91" }}>
             Welcome To FixFinder
           </Typography>
 
-          <Typography variant="body2" align="center" sx={{ opacity: 0.85 }} mb={2}>
+          <Typography variant="body2" align="center" sx={{ color: "#263c91", opacity: 0.9 }} mb={2}>
             Sign in to your account
           </Typography>
 
           {errorMsg ? (
-            <Typography sx={{ background: "rgba(0,0,0,0.2)", p: 1.2, borderRadius: 2, mb: 1 }}>
+            <Typography sx={{ background: "rgba(220, 38, 38, 0.1)", color: "#b91c1c", p: 1.2, borderRadius: 2, mb: 1, fontSize: 14 }}>
               {errorMsg}
             </Typography>
           ) : null}
@@ -127,8 +126,15 @@ export default function LoginPage() {
             margin="normal"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            InputLabelProps={{ style: { color: "#1e3a8a" } }}
-            sx={{ backgroundColor: "white", borderRadius: 1 }}
+            InputLabelProps={{ style: { color: "#263c91" } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 1,
+                "& fieldset": { borderColor: "#263c91" },
+                "&:hover fieldset": { borderColor: "#5063f9" },
+                "&.Mui-focused fieldset": { borderColor: "#5063f9", borderWidth: 2 },
+              },
+            }}
           />
 
           <TextField
@@ -138,13 +144,25 @@ export default function LoginPage() {
             margin="normal"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            InputLabelProps={{ style: { color: "#1e3a8a" } }}
-            sx={{ backgroundColor: "white", borderRadius: 1 }}
+            InputLabelProps={{ style: { color: "#263c91" } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 1,
+                "& fieldset": { borderColor: "#263c91" },
+                "&:hover fieldset": { borderColor: "#5063f9" },
+                "&.Mui-focused fieldset": { borderColor: "#5063f9", borderWidth: 2 },
+              },
+            }}
           />
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
         <Link
           underline="hover"
-          sx={{ color: "#bfdbfe", fontWeight: 600, cursor: "pointer" }}
+          sx={{
+            color: "#5063f9",
+            fontWeight: 600,
+            cursor: "pointer",
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+          }}
           onClick={() => {
             setFpEmail(email || "");
             setFpMsg("");
@@ -163,23 +181,28 @@ export default function LoginPage() {
               mt: 3,
               py: 1.2,
               fontWeight: 700,
-              backgroundColor: "#1e40af",
+              backgroundColor: "#5063f9",
               color: "white",
               borderRadius: 2,
-              boxShadow: "0px 6px 16px rgba(30, 64, 175, 0.45)",
-              "&:hover": { backgroundColor: "#1d4ed8" },
+              boxShadow: "0 4px 12px rgba(80, 99, 249, 0.35)",
+              "&:hover": { backgroundColor: "#3d4fd9" },
             }}
           >
             {loading ? "Logging in..." : "Login"}
           </Button>
 
-          <Divider sx={{ my: 3, borderColor: "rgba(255,255,255,0.3)" }} />
+          <Divider sx={{ my: 3, borderColor: "#263c91", opacity: 0.3 }} />
 
-          <Typography variant="body2" align="center" sx={{ opacity: 0.9 }}>
+          <Typography variant="body2" align="center" sx={{ color: "#263c91" }}>
             Don’t have an account?{" "}
             <Link
               underline="hover"
-              sx={{ color: "#bfdbfe", fontWeight: 600, cursor: "pointer" }}
+              sx={{
+                color: "#5063f9",
+                fontWeight: 600,
+                cursor: "pointer",
+                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+              }}
               onClick={() => router.push("/register")}
             >
               Sign up
@@ -187,29 +210,40 @@ export default function LoginPage() {
           </Typography>
         </Box>
       </Box>
-      <Dialog open={fpOpen} onClose={() => setFpOpen(false)}>
-  <DialogTitle>Reset Password</DialogTitle>
-  <DialogContent>
-    <Typography variant="body2" sx={{ mb: 1 }}>
-      Enter your email and we’ll send a password reset link.
-    </Typography>
-    <TextField
-      label="Email"
-      type="email"
-      fullWidth
-      margin="dense"
-      value={fpEmail}
-      onChange={(e) => setFpEmail(e.target.value)}
-    />
-    {fpMsg ? <Typography sx={{ mt: 1 }}>{fpMsg}</Typography> : null}
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => {setFpOpen(false); alert("sending link")}}>Cancel</Button>
-    <Button disabled={fpLoading} onClick={handleForgotPassword}>
-      {fpLoading ? "Sending..." : "OK"}
-    </Button>
-  </DialogActions>
-</Dialog>
+      <Dialog open={fpOpen} onClose={() => setFpOpen(false)} PaperProps={{ sx: { borderRadius: 2 } }}>
+        <DialogTitle sx={{ color: "#263c91", fontWeight: 700 }}>Reset Password</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 1, color: "#263c91" }}>
+            Enter your email and we’ll send a password reset link.
+          </Typography>
+          <TextField
+            label="Email"
+            type="email"
+            fullWidth
+            margin="dense"
+            value={fpEmail}
+            onChange={(e) => setFpEmail(e.target.value)}
+            InputLabelProps={{ style: { color: "#263c91" } }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": { borderColor: "#263c91" },
+                "&.Mui-focused fieldset": { borderColor: "#5063f9" },
+              },
+            }}
+          />
+          {fpMsg ? <Typography sx={{ mt: 1, color: "#263c91" }}>{fpMsg}</Typography> : null}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFpOpen(false)} sx={{ color: "#263c91" }}>Cancel</Button>
+          <Button
+            disabled={fpLoading}
+            onClick={handleForgotPassword}
+            sx={{ backgroundColor: "#5063f9", color: "white", fontWeight: 600, "&:hover": { backgroundColor: "#3d4fd9" } }}
+          >
+            {fpLoading ? "Sending..." : "OK"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

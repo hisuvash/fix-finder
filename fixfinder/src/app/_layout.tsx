@@ -10,10 +10,7 @@ function AppHeader() {
   const { isLoggedIn, logout, loading } = useAuth();
 
   const navItems = [
-    { label: "Home", href: "/" },
-    { label: "About", href: "/about" },
-    { label: "Search", href: "/search" }, // protected
-    { label: "Add", href: "/add" },       // protected
+    { label: "Search", href: "/search" }, // protected     // protected
   ];
 
   const handleNav = (href: string) => {
@@ -36,12 +33,12 @@ function AppHeader() {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: "#2563eb",
-        elevation: 6,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        backgroundColor: "#FAFAFA",
+        shadowColor: "rgba(0, 0, 0, 0.102)",
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 1,
+        shadowRadius: 20,
+        elevation: 8,
       }}
     >
       <Pressable
@@ -59,7 +56,7 @@ function AppHeader() {
           const active = pathname === item.href;
           return (
             <Pressable key={item.href} onPress={() => handleNav(item.href)}>
-              <Text style={{ fontWeight: active ? "700" : "500", color: "white" }}>
+              <Text style={{ fontWeight: active ? "700" : "500", color: "#111" }}>
                 {item.label}
               </Text>
             </Pressable>
@@ -70,7 +67,7 @@ function AppHeader() {
           <ActivityIndicator />
         ) : !isLoggedIn ? (
           <Pressable onPress={() => router.push("/login")}>
-            <Text style={{ fontWeight: "700", color: "white" }}>Login</Text>
+            <Text style={{ fontWeight: "700", color: "#111" }}>Login</Text>
           </Pressable>
         ) : (
           <Pressable
@@ -79,7 +76,7 @@ function AppHeader() {
               router.replace("/login");
             }}
           >
-            <Text style={{ fontWeight: "700", color: "white" }}>Logout</Text>
+            <Text style={{ fontWeight: "700", color: "#111" }}>Logout</Text>
           </Pressable>
         )}
       </View>

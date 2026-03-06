@@ -27,6 +27,12 @@ const userSchema = new mongoose.Schema(
     stateProvince: { type: String, required: true, trim: true },
     city: { type: String, required: true, trim: true },
 
+    // Profile picture URL (optional)
+    profileImageUrl: { type: String, trim: true, default: "" },
+
+    // Handymen this user has worked with (for "Past Handymen" section)
+    workedWithHandymen: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
     // ✅ Password reset fields
     resetPasswordTokenHash: { type: String },
     resetPasswordExpiresAt: { type: Date },
