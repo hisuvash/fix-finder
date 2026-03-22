@@ -1,17 +1,26 @@
-import { Stack, usePathname, router } from "expo-router";
+import { Stack, usePathname, router, type Href } from "expo-router";
 import React, { useEffect } from "react";
 import { Pressable, Text, View, Image, ActivityIndicator } from "react-native";
 import { AuthProvider, useAuth } from "../shared/auth/AuthContext";
+import { getAuthPayload } from "../shared/auth/jwtPayload";
 
-const PROTECTED_ROUTES = ["/search", "/add", "/profile"];
+const PROTECTED_ROUTES = ["/search", "/add", "/profile", "/connection-requests"];
 
 function AppHeader() {
   const pathname = usePathname();
-  const { isLoggedIn, logout, loading } = useAuth();
+  const { isLoggedIn, logout, loading, token } = useAuth();
+  const payload = getAuthPayload(token);
+  const userType = payload?.userType;
+  const isHandyman = userType === "Handyman";
 
-  const navItems = [
-    { label: "Search", href: "/search" }, // protected     // protected
-  ];
+  const primaryNav =
+    isLoggedIn && isHandyman
+      ? [{ label: "Requests", href: "/connection-requests" }]
+      : [{ label: "Search", href: "/search" }];
+
+  const navItems = isLoggedIn
+    ? [...primaryNav, { label: "Profile", href: "/profile" }]
+    : primaryNav;
 
   const handleNav = (href: string) => {
     if (loading) return;
@@ -22,7 +31,7 @@ function AppHeader() {
       return;
     }
 
-    router.push(href);
+    router.push(href as Href);
   };
 
   return (
@@ -86,20 +95,31 @@ function AppHeader() {
 
 function RouteGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isLoggedIn, loading } = useAuth();
+  const { isLoggedIn, loading, token } = useAuth();
 
   useEffect(() => {
-    // ✅ never guard until boot finished
     if (loading) return;
 
-    // ✅ never guard login/register screens
     if (pathname === "/login" || pathname === "/register") return;
 
     const isProtected = PROTECTED_ROUTES.includes(pathname);
     if (!isLoggedIn && isProtected) {
       router.replace({ pathname: "/login", params: { redirect: pathname } });
+      return;
     }
-  }, [pathname, isLoggedIn, loading]);
+
+    if (!isLoggedIn || !token) return;
+
+    const userType = getAuthPayload(token)?.userType;
+    if (pathname === "/search" && userType === "Handyman") {
+      router.replace("/connection-requests");
+      return;
+    }
+    if (pathname === "/connection-requests" && userType !== "Handyman") {
+      router.replace("/search");
+      return;
+    }
+  }, [pathname, isLoggedIn, loading, token]);
 
   return <>{children}</>;
 }

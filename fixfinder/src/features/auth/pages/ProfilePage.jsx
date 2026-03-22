@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [pastHandymen, setPastHandymen] = useState([]);
+  const [pastClients, setPastClients] = useState([]);
   const [handymenLoading, setHandymenLoading] = useState(true);
 
   useEffect(() => {
@@ -53,27 +54,40 @@ export default function ProfilePage() {
   }, [authLoading, isLoggedIn, token]);
 
   useEffect(() => {
-    if (!token || !isLoggedIn) return;
-    const fetchPastHandymen = async () => {
+    if (!token || !isLoggedIn || !user?.userType) return;
+    const fetchConnections = async () => {
       try {
         setHandymenLoading(true);
-        const res = await fetch(`${API_BASE_URL}/api/users/past-handymen`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && Array.isArray(data.handymen)) {
-          setPastHandymen(data.handymen);
+        if (user.userType === "Handyman") {
+          const res = await fetch(`${API_BASE_URL}/api/users/past-clients`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && Array.isArray(data.clients)) {
+            setPastClients(data.clients);
+            setPastHandymen([]);
+          }
+        } else {
+          const res = await fetch(`${API_BASE_URL}/api/users/past-handymen`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && Array.isArray(data.handymen)) {
+            setPastHandymen(data.handymen);
+            setPastClients([]);
+          }
         }
       } catch (e) {
-        console.log("Past handymen fetch error:", e);
+        console.log("Connections fetch error:", e);
       } finally {
         setHandymenLoading(false);
       }
     };
-    fetchPastHandymen();
-  }, [token, isLoggedIn]);
+    fetchConnections();
+  }, [token, isLoggedIn, user]);
 
-  const handymenToShow = pastHandymen;
+  const isHandyman = user?.userType === "Handyman";
+  const peopleToShow = isHandyman ? pastClients : pastHandymen;
 
   const leftContent = () => {
     if (authLoading || loading) {
@@ -112,6 +126,9 @@ export default function ProfilePage() {
         <Text style={styles.row}><Text style={styles.bold}>Country: </Text>{user.country}</Text>
         <Text style={styles.row}><Text style={styles.bold}>State/Province: </Text>{user.stateProvince}</Text>
         <Text style={styles.row}><Text style={styles.bold}>City: </Text>{user.city}</Text>
+        {user.phone ? (
+          <Text style={styles.row}><Text style={styles.bold}>Phone: </Text>{user.phone}</Text>
+        ) : null}
 
         <Pressable style={styles.button} onPress={() => router.push("/edit-profile")}>
           <Text style={styles.buttonText}>Edit Profile</Text>
@@ -126,40 +143,63 @@ export default function ProfilePage() {
         {leftContent()}
       </View>
       <View style={styles.gridRight}>
-        <Text style={styles.sectionTitle}>Past Handymen you have worked with:</Text>
+        <Text style={styles.sectionTitle}>
+          {isHandyman ? "Past clients you have worked with" : "Past handymen you have worked with"}
+        </Text>
+        <Text style={styles.sectionHint}>
+          Tap a card to open their profile, or use the links below to write a review.
+        </Text>
         {handymenLoading ? (
           <View style={styles.handymenLoading}>
             <ActivityIndicator size="small" />
           </View>
-        ) : handymenToShow.length === 0 ? (
+        ) : peopleToShow.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>You haven't worked with any handymen yet.</Text>
-            <Text style={styles.emptyStateSubtext}>Handymen you work with will appear here.</Text>
+            <Text style={styles.emptyStateText}>
+              {isHandyman
+                ? "No past clients linked yet."
+                : "You haven't worked with any handymen yet."}
+            </Text>
+            <Text style={styles.emptyStateSubtext}>
+              {isHandyman
+                ? "When a client adds you (or you run the seed script), clients appear here so you can open their profile and leave a review."
+                : "Run the seed script from the backend folder or use the API to link handymen, then open their profile here."}
+            </Text>
           </View>
         ) : (
           <ScrollView contentContainerStyle={styles.tilesContainer} showsVerticalScrollIndicator={false}>
-            {handymenToShow.map((handyman) => (
-              <Pressable
-                key={handyman.id}
-                style={styles.handymanCard}
-                onPress={() => router.push(`/user/${handyman.id}`)}
-              >
-                <View style={styles.avatarWrapper}>
-                  {handyman.profileImageUrl ? (
-                    <Image source={{ uri: handyman.profileImageUrl }} style={styles.avatar} />
-                  ) : (
-                    <View style={styles.avatarPlaceholder}>
-                      <Text style={styles.avatarInitial}>
-                        {(handyman.fullName || "?").charAt(0).toUpperCase()}
-                      </Text>
+            {peopleToShow.map((person) => {
+              const pid = String(person.id);
+              return (
+                <View key={pid} style={styles.handymanCard}>
+                  <Pressable onPress={() => router.push(`/user/${pid}`)}>
+                    <View style={styles.avatarWrapper}>
+                      {person.profileImageUrl ? (
+                        <Image source={{ uri: person.profileImageUrl }} style={styles.avatar} />
+                      ) : (
+                        <View style={styles.avatarPlaceholder}>
+                          <Text style={styles.avatarInitial}>
+                            {(person.fullName || "?").charAt(0).toUpperCase()}
+                          </Text>
+                        </View>
+                      )}
                     </View>
-                  )}
+                    <Text style={styles.handymanName} numberOfLines={2}>
+                      {person.fullName || (isHandyman ? "Client" : "Handyman")}
+                    </Text>
+                  </Pressable>
+                  <View style={styles.cardLinks}>
+                    <Pressable onPress={() => router.push(`/user/${pid}`)}>
+                      <Text style={styles.cardLink}>Profile</Text>
+                    </Pressable>
+                    <Text style={styles.cardLinkSep}>·</Text>
+                    <Pressable onPress={() => router.push(`/write-review/${pid}`)}>
+                      <Text style={styles.cardLink}>Write review</Text>
+                    </Pressable>
+                  </View>
                 </View>
-                <Text style={styles.handymanName} numberOfLines={2}>
-                  {handyman.fullName || "Handyman"}
-                </Text>
-              </Pressable>
-            ))}
+              );
+            })}
           </ScrollView>
         )}
       </View>
@@ -190,7 +230,30 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#263c91",
+    marginBottom: 8,
+  },
+  sectionHint: {
+    fontSize: 13,
+    color: "#666",
     marginBottom: 16,
+    lineHeight: 18,
+  },
+  cardLinks: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    flexWrap: "wrap",
+  },
+  cardLink: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#5063f9",
+  },
+  cardLinkSep: {
+    fontSize: 13,
+    color: "#999",
+    marginHorizontal: 6,
   },
   emptyState: {
     padding: 24,

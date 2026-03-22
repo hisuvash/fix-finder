@@ -4,6 +4,8 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
+const { router: reviewRoutes } = require("./routes/review.routes");
+const connectionRoutes = require("./routes/connection.routes");
 
 const app = express();
 const corsOptions = {
@@ -24,6 +26,8 @@ app.get("/", (req, res) => res.send("FixFinder API running ✅"));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/connections", connectionRoutes);
 
 const PORT = process.env.PORT || 5001;
 

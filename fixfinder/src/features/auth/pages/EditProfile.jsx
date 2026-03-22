@@ -19,6 +19,7 @@ export default function EditProfile() {
   const [country, setCountry] = useState("");
   const [stateProvince, setStateProvince] = useState("");
   const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
 
   useEffect(() => {
     if (authLoading) return;
@@ -54,6 +55,7 @@ export default function EditProfile() {
         setCountry(u.country || "");
         setStateProvince(u.stateProvince || "");
         setCity(u.city || "");
+        setPhone(u.phone || "");
       } catch (e) {
         console.log("EDIT LOAD ERROR:", e);
         setErrorMsg(e?.message || "Failed to load profile");
@@ -78,6 +80,11 @@ export default function EditProfile() {
       if (!country.trim() || !stateProvince.trim() || !city.trim()) {
         throw new Error("Country, state/province, and city are required.");
       }
+      const digits = phone.replace(/\D/g, "");
+      if (!phone.trim()) throw new Error("Phone number is required.");
+      if (digits.length < 10 || digits.length > 15) {
+        throw new Error("Enter a valid phone number (10–15 digits).");
+      }
 
       const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
         method: "PUT",
@@ -92,6 +99,7 @@ export default function EditProfile() {
           country: country.trim(),
           stateProvince: stateProvince.trim(),
           city: city.trim(),
+          phone: phone.trim(),
         }),
       });
 
@@ -152,6 +160,15 @@ export default function EditProfile() {
 
         <Text style={styles.label}>City</Text>
         <TextInput style={styles.input} value={city} onChangeText={setCity} />
+
+        <Text style={styles.label}>Phone</Text>
+        <TextInput
+          style={styles.input}
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          placeholder="10–15 digits"
+        />
 
         <Pressable style={styles.saveBtn} onPress={onSave} disabled={saving}>
           <Text style={styles.saveText}>{saving ? "Saving..." : "Save"}</Text>

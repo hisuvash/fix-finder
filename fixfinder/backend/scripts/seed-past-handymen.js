@@ -12,6 +12,7 @@
 require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("../models/User");
+const ConnectionRequest = require("../models/ConnectionRequest");
 
 async function seed() {
   const uri = process.env.MONGO_URI;
@@ -51,6 +52,25 @@ async function seed() {
     $addToSet: { workedWithHandymen: { $each: handymanIds } },
   });
   console.log("Updated user", normalUser.email, "with", handymanIds.length, "past handymen.");
+
+  for (const hid of handymanIds) {
+    await User.findByIdAndUpdate(hid, {
+      $addToSet: { workedWithClients: normalUser._id },
+    });
+  }
+  console.log("Updated handymen with this client in workedWithClients (for handyman→client reviews).");
+
+  for (const hid of handymanIds) {
+    await ConnectionRequest.findOneAndUpdate(
+      { fromUserId: normalUser._id, toUserId: hid },
+      {
+        $set: { status: "accepted" },
+        $setOnInsert: { fromUserId: normalUser._id, toUserId: hid },
+      },
+      { upsert: true }
+    );
+  }
+  console.log("Created/updated accepted ConnectionRequests (required for reviews).");
 
   await mongoose.disconnect();
   console.log("Done.");

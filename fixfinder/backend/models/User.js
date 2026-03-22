@@ -21,7 +21,13 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
+    /** Skills / services (Handyman profiles — used for search) */
+    skills: [{ type: String, trim: true }],
+
     passwordHash: { type: String, required: true },
+
+    /** Stored as entered (trimmed). Privacy: only exposed per connection rules on public profile. */
+    phone: { type: String, trim: true, default: "" },
 
     country: { type: String, required: true, trim: true },
     stateProvince: { type: String, required: true, trim: true },
@@ -30,8 +36,11 @@ const userSchema = new mongoose.Schema(
     // Profile picture URL (optional)
     profileImageUrl: { type: String, trim: true, default: "" },
 
-    // Handymen this user has worked with (for "Past Handymen" section)
+    // Handymen this Normal user has worked with (for "Past Handymen" + client→handyman reviews)
     workedWithHandymen: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
+    // Clients this Handyman has worked with (for handyman→client reviews)
+    workedWithClients: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
     // ✅ Password reset fields
     resetPasswordTokenHash: { type: String },

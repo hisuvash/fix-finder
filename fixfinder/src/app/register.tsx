@@ -1,5 +1,5 @@
 // app/register.tsx
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import RegisterPage from "../features/auth/pages/RegisterPage";
 
@@ -28,6 +28,8 @@ export default function RegisterScreen() {
   const [country, setCountry] = useState("Canada");
   const [stateProv, setStateProv] = useState("");
   const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -35,6 +37,12 @@ export default function RegisterScreen() {
 
   const countries = useMemo(() => Object.keys(COUNTRY_STATE), []);
   const statesForCountry = useMemo(() => COUNTRY_STATE[country] ?? [], [country]);
+
+  useEffect(() => {
+    if (userType !== "Handyman") {
+      setSelectedSkills([]);
+    }
+  }, [userType]);
 
   // keep state/province valid when country changes
   const handleCountryChange = (newCountry: string) => {
@@ -51,6 +59,14 @@ export default function RegisterScreen() {
     if (!country) return "Country is required.";
     if (!stateProv) return "State/Province is required.";
     if (!city.trim()) return "City is required.";
+    const digits = phone.replace(/\D/g, "");
+    if (!phone.trim()) return "Phone number is required.";
+    if (digits.length < 10 || digits.length > 15) {
+      return "Enter a valid phone number (10–15 digits).";
+    }
+    if (userType === "Handyman" && selectedSkills.length === 0) {
+      return "Please select at least one skill for your handyman profile.";
+    }
     return null;
   };
 
@@ -62,7 +78,7 @@ export default function RegisterScreen() {
       return;
     }
 
-    const payload = {
+    const payload: Record<string, unknown> = {
       email: email.trim().toLowerCase(),
       firstName: firstName.trim(),
       lastName: lastName.trim(),
@@ -71,7 +87,11 @@ export default function RegisterScreen() {
       country,
       stateProvince: stateProv,
       city: city.trim(),
+      phone: phone.trim(),
     };
+    if (userType === "Handyman") {
+      payload.skills = selectedSkills;
+    }
 
     try {
       setLoading(true);
@@ -88,12 +108,9 @@ export default function RegisterScreen() {
         throw new Error(data?.message || `Registration failed (${res.status})`);
       }
 
-      // data.token contains JWT from backend
-      // If you want to store it securely on mobile later, use expo-secure-store.
       console.log("✅ Registered. JWT:", data.token);
       console.log("✅ User:", data.user);
 
-      // Navigate to login page after signup
       router.push("/login");
     } catch (e: any) {
       setErrorMsg(e?.message ?? "Registration failed");
@@ -104,7 +121,6 @@ export default function RegisterScreen() {
 
   return (
     <RegisterPage
-      // form values + setters
       email={email}
       setEmail={setEmail}
       firstName={firstName}
@@ -116,18 +132,21 @@ export default function RegisterScreen() {
       password={password}
       setPassword={setPassword}
       country={country}
-      setCountry={handleCountryChange} // 👈 use wrapper to reset stateProv
+      setCountry={handleCountryChange}
       stateProv={stateProv}
       setStateProv={setStateProv}
       city={city}
       setCity={setCity}
+      phone={phone}
+      setPhone={setPhone}
       countries={countries}
       statesForCountry={statesForCountry}
-      // actions
       onRegister={handleRegister}
       onLoginRedirect={() => router.push("/login")}
-      // optional UI state (only if your RegisterPage.jsx uses them)
-
+      selectedSkills={selectedSkills}
+      setSelectedSkills={setSelectedSkills}
+      errorMsg={errorMsg}
+      loading={loading}
     />
   );
 }

@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const auth = require("../controller/authController");
+const { normalizeSkills } = require("../constants/handymanSkills");
+const { validatePhoneInput } = require("../utils/phone");
 const router = express.Router();
 
 function signToken(user) {
@@ -38,6 +40,8 @@ function safeUser(user) {
     country: user.country,
     stateProvince: user.stateProvince,
     city: user.city,
+    skills: user.skills || [],
+    phone: user.phone || "",
     createdAt: user.createdAt,
   };
 }
@@ -45,12 +49,15 @@ function safeUser(user) {
 // ✅ REGISTER
 router.post("/register", async (req, res) => {
   try {
-    const { email, firstName, lastName, userType, password, country, stateProvince, city } = req.body;
+    const { email, firstName, lastName, userType, password, country, stateProvince, city, skills, phone } =
+      req.body;
 
     if (!email || !email.includes("@")) return res.status(400).json({ message: "Valid email is required" });
     if (!firstName || !lastName) return res.status(400).json({ message: "Firstname and lastname are required" });
     if (!password || password.length < 8) return res.status(400).json({ message: "Password must be at least 8 characters" });
     if (!country || !stateProvince || !city) return res.status(400).json({ message: "Country, state/province, and city are required" });
+    const phoneCheck = validatePhoneInput(phone);
+    if (!phoneCheck.ok) return res.status(400).json({ message: phoneCheck.message });
 
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -60,15 +67,30 @@ router.post("/register", async (req, res) => {
     const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS || 12);
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
+    const nextType = userType === "Handyman" ? "Handyman" : "Normal";
+    let skillsArr = [];
+    if (nextType === "Handyman") {
+      if (Array.isArray(skills)) {
+        skillsArr = normalizeSkills(skills);
+      } else if (typeof skills === "string" && skills.trim()) {
+        skillsArr = normalizeSkills(skills.split(","));
+      }
+      if (skillsArr.length === 0) {
+        return res.status(400).json({ message: "Handymen must select at least one skill from the list." });
+      }
+    }
+
     const user = await User.create({
       email: normalizedEmail,
       firstName: firstName.trim(),
       lastName: lastName.trim(),
-      userType: userType === "Handyman" ? "Handyman" : "Normal",
+      userType: nextType,
       passwordHash,
+      phone: phoneCheck.value,
       country: country.trim(),
       stateProvince: stateProvince.trim(),
       city: city.trim(),
+      skills: nextType === "Handyman" ? skillsArr : [],
     });
 
     const token = signToken(user);
@@ -117,7 +139,7 @@ router.get("/me", requireAuth, async (req, res) => {
     console.log("PROFILE /me called by user:");
   try {
     console.log("PROFILE /me called by user:", req.user);
-    const user = await User.findById(req.user.userId);
+    const user = await User.findById(String(req.user.userId));
     if (!user) return res.status(404).json({ message: "User not found" });
 
     return res.status(200).json({ user: safeUser(user) });
@@ -129,7 +151,7 @@ router.get("/me", requireAuth, async (req, res) => {
 // ✅ UPDATE PROFILE (current user) - email NOT editable
 router.put("/me", requireAuth, async (req, res) => {
   try {
-    const { firstName, lastName, userType, country, stateProvince, city } = req.body;
+    const { firstName, lastName, userType, country, stateProvince, city, skills, phone } = req.body;
 
     // Basic validation (you can adjust)
     if (!firstName || !lastName) {
@@ -138,20 +160,44 @@ router.put("/me", requireAuth, async (req, res) => {
     if (!country || !stateProvince || !city) {
       return res.status(400).json({ message: "Country, state/province, and city are required" });
     }
+    const phoneCheck = validatePhoneInput(phone);
+    if (!phoneCheck.ok) return res.status(400).json({ message: phoneCheck.message });
+
+    const nextType = userType === "Handyman" ? "Handyman" : "Normal";
+    const skillsProvided = skills !== undefined && skills !== null;
+    let skillsArr = [];
+    if (skillsProvided) {
+      if (Array.isArray(skills)) {
+        skillsArr = normalizeSkills(skills);
+      } else if (typeof skills === "string" && skills.trim()) {
+        skillsArr = normalizeSkills(skills.split(","));
+      }
+    }
 
     const update = {
       firstName: String(firstName).trim(),
       lastName: String(lastName).trim(),
-      userType: userType === "Handyman" ? "Handyman" : "Normal",
+      userType: nextType,
+      phone: phoneCheck.value,
       country: String(country).trim(),
       stateProvince: String(stateProvince).trim(),
       city: String(city).trim(),
     };
+    if (nextType === "Handyman") {
+      if (skillsProvided) {
+        if (skillsArr.length === 0) {
+          return res.status(400).json({ message: "Handymen must keep at least one skill from the list." });
+        }
+        update.skills = skillsArr;
+      }
+    } else {
+      update.skills = [];
+    }
 
     // ✅ important: do NOT allow email update
     // (ignore req.body.email even if frontend sends it)
 
-    const user = await User.findByIdAndUpdate(req.user.userId, update, {
+    const user = await User.findByIdAndUpdate(String(req.user.userId), update, {
       new: true,
       runValidators: true,
     });

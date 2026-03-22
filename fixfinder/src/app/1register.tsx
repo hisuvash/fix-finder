@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import RegisterPage from "../features/auth/pages/RegisterPage";
 
@@ -10,6 +10,8 @@ const COUNTRY_STATE: Record<string, string[]> = {
   Nepal: ["Bagmati", "Gandaki", "Koshi"],
 };
 
+const API_BASE_URL = "http://localhost:5001";
+
 export default function RegisterScreen() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -19,12 +21,22 @@ export default function RegisterScreen() {
   const [country, setCountry] = useState("Canada");
   const [stateProv, setStateProv] = useState("");
   const [city, setCity] = useState("");
+  const [phone, setPhone] = useState("");
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const countries = useMemo(() => Object.keys(COUNTRY_STATE), []);
-  const statesForCountry = useMemo(
-    () => COUNTRY_STATE[country] || [],
-    [country]
-  );
+  const statesForCountry = useMemo(() => COUNTRY_STATE[country] || [], [country]);
+
+  useEffect(() => {
+    if (userType !== "Handyman") setSelectedSkills([]);
+  }, [userType]);
+
+  const handleCountryChange = (newCountry: string) => {
+    setCountry(newCountry);
+    setStateProv("");
+  };
 
   const validate = () => {
     if (!email.includes("@")) return "Invalid email";
@@ -34,44 +46,50 @@ export default function RegisterScreen() {
     if (!country) return "Country required";
     if (!stateProv) return "State/Province required";
     if (!city) return "City required";
+    const digits = phone.replace(/\D/g, "");
+    if (!phone.trim()) return "Phone required";
+    if (digits.length < 10 || digits.length > 15) return "Valid phone (10–15 digits)";
+    if (userType === "Handyman" && selectedSkills.length === 0) {
+      return "Select at least one skill";
+    }
     return null;
   };
 
   const handleRegister = async () => {
+    setErrorMsg("");
     const error = validate();
     if (error) {
-      alert(error);
+      setErrorMsg(error);
       return;
     }
 
-    const payload = {
-      email,
+    const payload: Record<string, unknown> = {
+      email: email.trim().toLowerCase(),
       firstName,
       lastName,
       userType,
-      password, // send to backend (backend will hash + salt + JWT)
+      password,
       country,
       stateProvince: stateProv,
       city,
+      phone: phone.trim(),
     };
-
-    console.log("Register Payload:", payload);
+    if (userType === "Handyman") payload.skills = selectedSkills;
 
     try {
-      // Example API call
-      // const res = await fetch("http://localhost:5000/api/register", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify(payload),
-      // });
-
-      // const data = await res.json();
-      // if (!res.ok) throw new Error(data.message);
-
-      // After successful registration
+      setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || "Registration failed");
       router.push("/login");
     } catch (err: any) {
-      alert(err.message || "Registration failed");
+      setErrorMsg(err?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,15 +106,21 @@ export default function RegisterScreen() {
       password={password}
       setPassword={setPassword}
       country={country}
-      setCountry={setCountry}
+      setCountry={handleCountryChange}
       stateProv={stateProv}
       setStateProv={setStateProv}
       city={city}
       setCity={setCity}
+      phone={phone}
+      setPhone={setPhone}
       countries={countries}
       statesForCountry={statesForCountry}
       onRegister={handleRegister}
       onLoginRedirect={() => router.push("/login")}
+      selectedSkills={selectedSkills}
+      setSelectedSkills={setSelectedSkills}
+      errorMsg={errorMsg}
+      loading={loading}
     />
   );
 }
