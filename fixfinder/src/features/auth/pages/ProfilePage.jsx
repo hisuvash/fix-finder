@@ -172,7 +172,10 @@ export default function ProfilePage() {
               const pid = String(person.id);
               return (
                 <View key={pid} style={styles.handymanCard}>
-                  <Pressable onPress={() => router.push(`/user/${pid}`)}>
+                  <Pressable
+                    style={styles.cardPressable}
+                    onPress={() => router.push(`/user/${pid}`)}
+                  >
                     <View style={styles.avatarWrapper}>
                       {person.profileImageUrl ? (
                         <Image source={{ uri: person.profileImageUrl }} style={styles.avatar} />
@@ -289,8 +292,15 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
+  /** Full width + center children so the avatar isn’t left-aligned inside a stretched row (web/RN). */
+  cardPressable: {
+    width: "100%",
+    alignItems: "center",
+  },
   avatarWrapper: {
     marginBottom: 8,
+    alignItems: "center",
+    alignSelf: "center",
   },
   avatar: {
     width: 64,
