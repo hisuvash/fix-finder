@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Pressable, ActivityIndicator, StyleSheet, Alert, Image, ScrollView } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, StyleSheet, Alert, Image, ScrollView, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { useAuth } from "../../../shared/auth/AuthContext";
 import { API_BASE_URL } from "../../../shared/config/api";
 
 export default function ProfilePage() {
   const { token, isLoggedIn, loading: authLoading } = useAuth();
+  const { width } = useWindowDimensions();
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -88,6 +89,13 @@ export default function ProfilePage() {
 
   const isHandyman = user?.userType === "Handyman";
   const peopleToShow = isHandyman ? pastClients : pastHandymen;
+  const isMobile = width < 900;
+
+  const resolveImageUri = (raw) => {
+    if (!raw) return "";
+    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+    return `${API_BASE_URL}${raw}`;
+  };
 
   const leftContent = () => {
     if (authLoading || loading) {
@@ -114,6 +122,17 @@ export default function ProfilePage() {
     }
     return (
       <View style={styles.card}>
+        <View style={styles.profileImageWrap}>
+          {user.profileImageUrl ? (
+            <Image source={{ uri: resolveImageUri(user.profileImageUrl) }} style={styles.profileImage} />
+          ) : (
+            <View style={styles.profileImagePlaceholder}>
+              <Text style={styles.profileImageInitial}>
+                {(user.firstName || user.email || "?").charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+        </View>
         <Text style={styles.title}>Profile</Text>
         <Text style={styles.subtitle}>User Profile</Text>
 
@@ -138,7 +157,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <View style={styles.grid}>
+    <View style={[styles.grid, isMobile && styles.gridMobile]}>
       <View style={styles.gridLeft}>
         {leftContent()}
       </View>
@@ -215,6 +234,9 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: "row",
     backgroundColor: "#f5f7fb",
+  },
+  gridMobile: {
+    flexDirection: "column",
   },
   gridLeft: {
     flex: 1,
@@ -344,7 +366,31 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
     display: "flex",
-    alignSelf: "flex-start",
+  },
+  profileImageWrap: {
+    marginBottom: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileImage: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    borderWidth: 2,
+    borderColor: "#dbe3ff",
+  },
+  profileImagePlaceholder: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: "#4b63ff",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileImageInitial: {
+    color: "white",
+    fontSize: 36,
+    fontWeight: "800",
   },
   title: { fontSize: 24, fontWeight: "700", color: "#263c91", textAlign: "center", marginBottom: 4 },
   subtitle: { textAlign: "center", color: "#263c91", marginBottom: 12 },
@@ -355,8 +401,6 @@ const styles = StyleSheet.create({
   error: { color: "red", marginTop: 8 },
   button: {
     marginTop: 18,
-    backgroundColor: "#1e40af",
-    paddingVertical: 12,
     backgroundColor: "#5063f9",
     padding: 16,
     paddingHorizontal: 24,

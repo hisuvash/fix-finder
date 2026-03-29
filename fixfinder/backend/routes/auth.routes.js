@@ -1,11 +1,40 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
 const User = require("../models/User");
 const auth = require("../controller/authController");
 const { normalizeSkills } = require("../constants/handymanSkills");
 const { validatePhoneInput } = require("../utils/phone");
 const router = express.Router();
+const uploadsDir = path.join(__dirname, "..", "uploads", "profile-images");
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "").toLowerCase();
+    const safeExt = ext || ".jpg";
+    cb(null, `user-${Date.now()}-${Math.round(Math.random() * 1e9)}${safeExt}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    return cb(new Error("Only JPG, PNG, or WEBP images are allowed."));
+  },
+});
 
 function signToken(user) {
   return jwt.sign(
@@ -42,6 +71,7 @@ function safeUser(user) {
     city: user.city,
     skills: user.skills || [],
     phone: user.phone || "",
+    profileImageUrl: user.profileImageUrl || "",
     createdAt: user.createdAt,
   };
 }
@@ -212,6 +242,38 @@ router.put("/me", requireAuth, async (req, res) => {
     console.error("UPDATE ME ERROR:", err);
     return res.status(500).json({ message: "Server error" });
   }
+});
+
+// ✅ Upload/update profile image (current user)
+router.post("/me/profile-image", requireAuth, (req, res) => {
+  upload.single("profileImage")(req, res, async (err) => {
+    try {
+      if (err) {
+        return res.status(400).json({ message: err.message || "Image upload failed." });
+      }
+      if (!req.file) {
+        return res.status(400).json({ message: "Profile image file is required." });
+      }
+
+      const relativePath = `/uploads/profile-images/${req.file.filename}`;
+
+      const user = await User.findByIdAndUpdate(
+        String(req.user.userId),
+        { profileImageUrl: relativePath },
+        { new: true, runValidators: true }
+      );
+
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      return res.status(200).json({
+        message: "Profile image updated successfully",
+        user: safeUser(user),
+      });
+    } catch (uploadErr) {
+      console.error("UPLOAD PROFILE IMAGE ERROR:", uploadErr);
+      return res.status(500).json({ message: "Server error" });
+    }
+  });
 });
 
 router.post("/forgot-password", auth.forgotPassword);
