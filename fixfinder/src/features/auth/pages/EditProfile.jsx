@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, Alert, Image } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, Alert, Image, Platform } from "react-native";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../../shared/auth/AuthContext";
@@ -165,11 +165,15 @@ export default function EditProfile() {
       setUploadingImage(true);
 
       const formData = new FormData();
-      formData.append("profileImage", {
-        uri: selectedImage.uri,
-        name: selectedImage.fileName || `profile-${Date.now()}.jpg`,
-        type: selectedImage.mimeType || "image/jpeg",
-      });
+      if (Platform.OS === "web" && selectedImage.file) {
+        formData.append("profileImage", selectedImage.file);
+      } else {
+        formData.append("profileImage", {
+          uri: selectedImage.uri,
+          name: selectedImage.fileName || `profile-${Date.now()}.jpg`,
+          type: selectedImage.mimeType || "image/jpeg",
+        });
+      }
 
       const res = await fetch(`${API_BASE_URL}/api/auth/me/profile-image`, {
         method: "POST",

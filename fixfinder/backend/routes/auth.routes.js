@@ -257,13 +257,10 @@ router.post("/me/profile-image", requireAuth, (req, res) => {
 
       const relativePath = `/uploads/profile-images/${req.file.filename}`;
 
-      const user = await User.findByIdAndUpdate(
-        String(req.user.userId),
-        { profileImageUrl: relativePath },
-        { new: true, runValidators: true }
-      );
-
+      const user = await User.findById(String(req.user.userId));
       if (!user) return res.status(404).json({ message: "User not found" });
+      user.profileImageUrl = relativePath;
+      await user.save();
 
       return res.status(200).json({
         message: "Profile image updated successfully",
