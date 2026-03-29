@@ -120,6 +120,12 @@ export default function UserProfilePage() {
     if (res.ok) setCanReview(!!data.canReview);
   }, [id, token]);
 
+  const resolveImageUri = (rawUrl: string | null | undefined) => {
+    if (!rawUrl) return "";
+    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) return rawUrl;
+    return `${API_BASE_URL}${rawUrl}`;
+  };
+
   useEffect(() => {
     if (!id || !token || !isLoggedIn) {
       if (!isLoggedIn) router.replace("/login");
@@ -174,7 +180,7 @@ export default function UserProfilePage() {
       <View style={styles.card}>
         <View style={styles.avatarSection}>
           {user.profileImageUrl ? (
-            <Image source={{ uri: user.profileImageUrl }} style={styles.avatar} />
+            <Image source={{ uri: resolveImageUri(user.profileImageUrl) }} style={styles.avatar} />
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Text style={styles.avatarInitial}>
@@ -243,7 +249,7 @@ export default function UserProfilePage() {
             <View style={styles.reviewHeader}>
               <View style={styles.reviewerAvatar}>
                 {r.reviewer.profileImageUrl ? (
-                  <Image source={{ uri: r.reviewer.profileImageUrl }} style={styles.reviewerImg} />
+                  <Image source={{ uri: resolveImageUri(r.reviewer.profileImageUrl) }} style={styles.reviewerImg} />
                 ) : (
                   <Text style={styles.reviewerInitial}>
                     {(r.reviewer.fullName || "?").charAt(0).toUpperCase()}

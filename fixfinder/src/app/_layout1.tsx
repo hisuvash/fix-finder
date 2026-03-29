@@ -79,7 +79,7 @@ function AppHeader() {
             <Pressable key={item.href} onPress={() => handleNav(item.href)}>
               <Text style={{
                  fontWeight: active ? "700" : "500",
-                  color: "white",              // ✅ ADD THIS
+                  color: "white",             
                 }}>
                 {item.label}
               </Text>

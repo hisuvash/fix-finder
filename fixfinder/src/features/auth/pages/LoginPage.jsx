@@ -52,13 +52,13 @@ export default function LoginPage() {
       if (!res.ok) throw new Error(data?.message || "Login failed");
       if (!data?.token) throw new Error("Token not received from server.");
 
-      // ✅ update context + persist token
+      // update context + persist token
       await login(data.token);
 
       const redirectTo =
         typeof params.redirect === "string" ? params.redirect : "/profile";
 
-      // ✅ one tick delay prevents guard race conditions
+      // one tick delay prevents guard race conditions
       setTimeout(() => {
         router.replace(redirectTo);
       }, 0);
