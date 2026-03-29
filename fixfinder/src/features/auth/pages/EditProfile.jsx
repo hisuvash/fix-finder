@@ -150,14 +150,16 @@ export default function EditProfile() {
       });
 
       if (result.canceled || !result.assets?.length) return;
-      setSelectedImage(result.assets[0]);
+      const chosen = result.assets[0];
+      setSelectedImage(chosen);
+      await uploadSelectedImage(chosen);
     } catch (e) {
       Alert.alert("Image Picker Error", e?.message || "Failed to open image picker");
     }
   };
 
-  const uploadSelectedImage = async () => {
-    if (!selectedImage?.uri) {
+  const uploadSelectedImage = async (imageAsset = selectedImage) => {
+    if (!imageAsset?.uri) {
       Alert.alert("No image selected", "Please choose an image first.");
       return;
     }
@@ -165,13 +167,13 @@ export default function EditProfile() {
       setUploadingImage(true);
 
       const formData = new FormData();
-      if (Platform.OS === "web" && selectedImage.file) {
-        formData.append("profileImage", selectedImage.file);
+      if (Platform.OS === "web" && imageAsset.file) {
+        formData.append("profileImage", imageAsset.file);
       } else {
         formData.append("profileImage", {
-          uri: selectedImage.uri,
-          name: selectedImage.fileName || `profile-${Date.now()}.jpg`,
-          type: selectedImage.mimeType || "image/jpeg",
+          uri: imageAsset.uri,
+          name: imageAsset.fileName || `profile-${Date.now()}.jpg`,
+          type: imageAsset.mimeType || "image/jpeg",
         });
       }
 
@@ -228,14 +230,7 @@ export default function EditProfile() {
           )}
           <View style={styles.imageActionsRow}>
             <Pressable style={styles.smallBtn} onPress={pickImage} disabled={uploadingImage}>
-              <Text style={styles.smallBtnText}>Choose Image</Text>
-            </Pressable>
-            <Pressable
-              style={[styles.smallBtn, styles.uploadBtn]}
-              onPress={uploadSelectedImage}
-              disabled={uploadingImage || !selectedImage}
-            >
-              <Text style={styles.smallBtnText}>{uploadingImage ? "Uploading..." : "Upload"}</Text>
+              <Text style={styles.smallBtnText}>{uploadingImage ? "Uploading..." : "Choose Image"}</Text>
             </Pressable>
           </View>
         </View>
@@ -324,9 +319,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
-  },
-  uploadBtn: {
-    backgroundColor: "#1d4ed8",
   },
   smallBtnText: {
     color: "white",
