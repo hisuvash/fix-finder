@@ -163,8 +163,8 @@ export default function ProfilePage() {
                 onPress={() => router.push(`/user/${handyman.id}`)}
               >
                 <View style={styles.avatarWrapper}>
-                  {handyman.profileImageUrl ? (
-                    <Image source={{ uri: handyman.profileImageUrl }} style={styles.avatar} />
+                  {getImageUri(handyman.profileImageUrl) ? (
+                    <Image source={{ uri: getImageUri(handyman.profileImageUrl) }} style={styles.avatar} />
                   ) : (
                     <View style={styles.avatarPlaceholder}>
                       <Text style={styles.avatarInitial}>
