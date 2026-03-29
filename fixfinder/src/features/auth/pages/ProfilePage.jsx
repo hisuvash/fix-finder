@@ -197,7 +197,7 @@ export default function ProfilePage() {
                   >
                     <View style={styles.avatarWrapper}>
                       {person.profileImageUrl ? (
-                        <Image source={{ uri: person.profileImageUrl }} style={styles.avatar} />
+                        <Image source={{ uri: resolveImageUri(person.profileImageUrl) }} style={styles.avatar} />
                       ) : (
                         <View style={styles.avatarPlaceholder}>
                           <Text style={styles.avatarInitial}>
