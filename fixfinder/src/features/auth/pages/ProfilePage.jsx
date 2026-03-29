@@ -108,9 +108,6 @@ export default function ProfilePage() {
     return (
       <View style={styles.card}>
         <Text style={styles.title}>Profile</Text>
-        <Text style={styles.subtitle}>User Profile</Text>
-
-        <View style={styles.divider} />
         <View style={styles.myAvatarRow}>
           {getImageUri(user.profileImageUrl) ? (
             <Image source={{ uri: getImageUri(user.profileImageUrl) }} style={styles.avatar} />
@@ -122,6 +119,9 @@ export default function ProfilePage() {
             </View>
           )}
         </View>
+        <Text style={styles.subtitle}>User Profile</Text>
+
+        <View style={styles.divider} />
 
         <Text style={styles.row}><Text style={styles.bold}>Email: </Text>{user.email}</Text>
         <Text style={styles.row}><Text style={styles.bold}>Firstname: </Text>{user.firstName}</Text>
