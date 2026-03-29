@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, StyleSheet, Alert, Image, Platform } from "react-native";
 import { router } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../../shared/auth/AuthContext";
 import { API_BASE_URL } from "../../../shared/config/api";
 
@@ -20,6 +21,15 @@ export default function EditProfile() {
   const [stateProvince, setStateProvince] = useState("");
   const [city, setCity] = useState("");
   const [phone, setPhone] = useState("");
+  const [profileImageUrl, setProfileImageUrl] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const resolveImageUri = (raw) => {
+    if (!raw) return "";
+    if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+    return `${API_BASE_URL}${raw}`;
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -56,6 +66,7 @@ export default function EditProfile() {
         setStateProvince(u.stateProvince || "");
         setCity(u.city || "");
         setPhone(u.phone || "");
+        setProfileImageUrl(u.profileImageUrl || "");
       } catch (e) {
         console.log("EDIT LOAD ERROR:", e);
         setErrorMsg(e?.message || "Failed to load profile");
@@ -123,6 +134,67 @@ export default function EditProfile() {
     }
   };
 
+  const pickImage = async () => {
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert("Permission needed", "Please allow photo access to upload a profile image.");
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+
+      if (result.canceled || !result.assets?.length) return;
+      const chosen = result.assets[0];
+      setSelectedImage(chosen);
+      await uploadSelectedImage(chosen);
+    } catch (e) {
+      Alert.alert("Image Picker Error", e?.message || "Failed to open image picker");
+    }
+  };
+
+  const uploadSelectedImage = async (imageAsset = selectedImage) => {
+    if (!imageAsset?.uri) {
+      Alert.alert("No image selected", "Please choose an image first.");
+      return;
+    }
+    try {
+      setUploadingImage(true);
+
+      const formData = new FormData();
+      if (Platform.OS === "web" && imageAsset.file) {
+        formData.append("profileImage", imageAsset.file);
+      } else {
+        formData.append("profileImage", {
+          uri: imageAsset.uri,
+          name: imageAsset.fileName || `profile-${Date.now()}.jpg`,
+          type: imageAsset.mimeType || "image/jpeg",
+        });
+      }
+
+      const res = await fetch(`${API_BASE_URL}/api/auth/me/profile-image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || "Image upload failed");
+
+      const nextUrl = data?.user?.profileImageUrl || "";
+      setProfileImageUrl(nextUrl);
+      setSelectedImage(null);
+      Alert.alert("Success", "Profile image updated ✅");
+    } catch (e) {
+      Alert.alert("Upload Error", e?.message || "Image upload failed");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
   if (authLoading || loading) {
     return (
       <View style={styles.centerScreen}>
@@ -139,6 +211,29 @@ export default function EditProfile() {
         <Text style={styles.subtitle}>Update your details</Text>
 
         {errorMsg ? <Text style={styles.error}>{errorMsg}</Text> : null}
+        <View style={styles.imageSection}>
+          {selectedImage?.uri || profileImageUrl ? (
+            <Image
+              source={{
+                uri: selectedImage?.uri || resolveImageUri(profileImageUrl),
+              }}
+              style={styles.profileImage}
+            />
+          ) : (
+            <View style={styles.profileImagePlaceholder}>
+              <Text style={styles.profileImageInitial}>
+                {(firstName || email || "?").charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+          <View style={styles.imageActionsRow}>
+            <Pressable style={styles.smallBtn} onPress={pickImage} disabled={uploadingImage}>
+              <Text style={styles.smallBtnText}>{uploadingImage ? "Uploading..." : "Choose Image"}</Text>
+            </Pressable>
+          </View>
+        </View>
+
+
 
         <Text style={styles.label}>Email (read-only)</Text>
         <TextInput style={[styles.input, styles.inputDisabled]} value={email} editable={false} />
@@ -189,6 +284,45 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     backgroundColor: "#f5f7fb",
+  },
+   imageSection: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  profileImage: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#dbeafe",
+    marginBottom: 10,
+  },
+  profileImagePlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "#4b63ff",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  profileImageInitial: {
+    color: "white",
+    fontSize: 34,
+    fontWeight: "800",
+  },
+  imageActionsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  smallBtn: {
+    backgroundColor: "#2563eb",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  smallBtnText: {
+    color: "white",
+    fontWeight: "700",
   },
   card: {
     padding: 24,
