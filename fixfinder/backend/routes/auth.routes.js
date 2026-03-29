@@ -1,8 +1,11 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const fs = require("fs");
+const path = require("path");
 const User = require("../models/User");
 const auth = require("../controller/authController");
+const { uploadProfileImage } = require("../middleware/uploadProfileImage");
 const router = express.Router();
 
 function signToken(user) {
@@ -38,6 +41,7 @@ function safeUser(user) {
     country: user.country,
     stateProvince: user.stateProvince,
     city: user.city,
+    profileImageUrl: user.profileImageUrl || null,
     createdAt: user.createdAt,
   };
 }
@@ -165,6 +169,38 @@ router.put("/me", requireAuth, async (req, res) => {
   } catch (err) {
     console.error("UPDATE ME ERROR:", err);
     return res.status(500).json({ message: "Server error" });
+  }
+});
+
+router.put("/me/profile-image", requireAuth, uploadProfileImage.single("profileImage"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Profile image file is required." });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const previousPath = user.profileImageUrl || "";
+    const relativePath = `/uploads/profile-images/${req.file.filename}`;
+
+    user.profileImageUrl = relativePath;
+    await user.save();
+
+    if (previousPath && previousPath.startsWith("/uploads/profile-images/")) {
+      const previousFile = path.join(__dirname, "..", previousPath.replace(/^\//, ""));
+      if (previousFile !== req.file.path && fs.existsSync(previousFile)) {
+        fs.unlink(previousFile, () => {});
+      }
+    }
+
+    return res.status(200).json({
+      message: "Profile image updated successfully",
+      user: safeUser(user),
+    });
+  } catch (err) {
+    console.error("UPDATE PROFILE IMAGE ERROR:", err);
+    return res.status(500).json({ message: err.message || "Server error" });
   }
 });
 

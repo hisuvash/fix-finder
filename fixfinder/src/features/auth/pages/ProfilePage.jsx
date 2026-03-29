@@ -75,6 +75,13 @@ export default function ProfilePage() {
 
   const handymenToShow = pastHandymen;
 
+  const getImageUri = (imagePath) => {
+    if (!imagePath) return null;
+    if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) return imagePath;
+    if (imagePath.startsWith("/")) return `${API_BASE_URL}${imagePath}`;
+    return `${API_BASE_URL}/${imagePath}`;
+  };
+
   const leftContent = () => {
     if (authLoading || loading) {
       return (
@@ -104,6 +111,17 @@ export default function ProfilePage() {
         <Text style={styles.subtitle}>User Profile</Text>
 
         <View style={styles.divider} />
+        <View style={styles.myAvatarRow}>
+          {getImageUri(user.profileImageUrl) ? (
+            <Image source={{ uri: getImageUri(user.profileImageUrl) }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarInitial}>
+                {(user.firstName || user.email || "?").charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+        </View>
 
         <Text style={styles.row}><Text style={styles.bold}>Email: </Text>{user.email}</Text>
         <Text style={styles.row}><Text style={styles.bold}>Firstname: </Text>{user.firstName}</Text>
@@ -228,6 +246,11 @@ const styles = StyleSheet.create({
   },
   avatarWrapper: {
     marginBottom: 8,
+  },
+  myAvatarRow: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 12,
   },
   avatar: {
     width: 64,
