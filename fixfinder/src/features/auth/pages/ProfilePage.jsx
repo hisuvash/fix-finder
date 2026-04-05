@@ -7,6 +7,7 @@ import { API_BASE_URL } from "../../../shared/config/api";
 export default function ProfilePage() {
   const { token, isLoggedIn, loading: authLoading } = useAuth();
   const { width } = useWindowDimensions();
+  const isMobile = width < 900;
   
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -89,7 +90,6 @@ export default function ProfilePage() {
 
   const isHandyman = user?.userType === "Handyman";
   const peopleToShow = isHandyman ? pastClients : pastHandymen;
-  const isMobile = width < 900;
 
   const resolveImageUri = (raw) => {
     if (!raw) return "";
@@ -121,7 +121,7 @@ export default function ProfilePage() {
       );
     }
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, isMobile && styles.cardMobile]}>
        <View style={styles.profileImageWrap}>
           {user.profileImageUrl ? (
             <Image source={{ uri: resolveImageUri(user.profileImageUrl) }} style={styles.profileImage} />
@@ -157,10 +157,10 @@ export default function ProfilePage() {
 
   return (
   <View style={[styles.grid, isMobile && styles.gridMobile]}>
-      <View style={styles.gridLeft}>
+      <View style={[styles.gridLeft, isMobile && styles.gridLeftMobile]}>
         {leftContent()}
       </View>
-      <View style={styles.gridRight}>
+      <View style={[styles.gridRight, isMobile && styles.gridRightMobile]}>
         <Text style={styles.sectionTitle}>
           {isHandyman ? "Past clients you have worked with" : "Past handymen you have worked with"}
         </Text>
@@ -245,10 +245,21 @@ const styles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: "#0000001c",
   },
+  gridLeftMobile: {
+    borderRightWidth: 0,
+    paddingBottom: 0,
+    width: "100%",
+    alignItems: "stretch",
+    flex: 0,
+  },
   gridRight: {
     flex: 3,
     padding: 20,
     backgroundColor: "#f5f7fb",
+  },
+  gridRightMobile: {
+    paddingTop: 10,
+    width: "100%",
   },
   sectionTitle: {
     fontSize: 18,
@@ -365,6 +376,11 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 8,
     display: "flex",
+  },
+  cardMobile: {
+    width: "100%",
+    maxWidth: "100%",
+    alignSelf: "stretch",
   },
   profileImageWrap: {
     marginBottom: 12,

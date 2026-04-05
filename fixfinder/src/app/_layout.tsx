@@ -13,14 +13,13 @@ function AppHeader() {
   const userType = payload?.userType;
   const isHandyman = userType === "Handyman";
 
-  const primaryNav =
-    isLoggedIn && isHandyman
+  const primaryNav = !isLoggedIn
+    ? []
+    : isHandyman
       ? [{ label: "Requests", href: "/connection-requests" }]
       : [{ label: "Search", href: "/search" }];
 
-  const navItems = isLoggedIn
-    ? [...primaryNav, { label: "Profile", href: "/profile" }]
-    : primaryNav;
+  const navItems = isLoggedIn ? [...primaryNav, { label: "Profile", href: "/profile" }] : [];
 
   const handleNav = (href: string) => {
     if (loading) return;
@@ -75,8 +74,18 @@ function AppHeader() {
         {loading ? (
           <ActivityIndicator />
         ) : !isLoggedIn ? (
-          <Pressable onPress={() => router.push("/login")}>
-            <Text style={{ fontWeight: "700", color: "#111" }}>Login</Text>
+          <Pressable
+            onPress={() => router.push("/login")}
+            style={{
+              backgroundColor: "#28a745",
+              borderColor: "#28a745",
+              borderWidth: 1,
+              paddingVertical: 8,
+              paddingHorizontal: 20,
+              borderRadius: 4,
+            }}
+          >
+            <Text style={{ fontWeight: "700", color: "#fff" }}>Login</Text>
           </Pressable>
         ) : (
           <Pressable
