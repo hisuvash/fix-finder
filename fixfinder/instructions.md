@@ -39,3 +39,10 @@ project-root/
 ├─ public/
 ├─ package.json
 └─ vite.config.js / webpack.config.js
+
+
+npm install
+
+npx expo start -c
+
+npx nodemon server.js
