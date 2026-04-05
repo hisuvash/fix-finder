@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import RegisterPage from "../features/auth/pages/RegisterPage";
+import { API_BASE_URL } from "../shared/config/api";
 
 type UserType = "Normal" | "Handyman";
 
@@ -9,8 +10,6 @@ const COUNTRY_STATE: Record<string, string[]> = {
   USA: ["California", "Texas", "New York", "Florida"],
   Nepal: ["Bagmati", "Gandaki", "Koshi"],
 };
-
-const API_BASE_URL = "http://localhost:5001";
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState("");

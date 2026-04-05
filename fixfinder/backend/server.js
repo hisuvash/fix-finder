@@ -21,6 +21,10 @@ const allowedOrigins = [
   "http://127.0.0.1:19006",
   "http://localhost:19000",
   "http://127.0.0.1:19000",
+  ...(process.env.CORS_ORIGINS || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
 ];
 
 const corsOptions = {

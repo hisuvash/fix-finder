@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { router } from "expo-router";
 import RegisterPage from "../features/auth/pages/RegisterPage";
+import { API_BASE_URL } from "../shared/config/api";
 
 type UserType = "Normal" | "Handyman";
 
@@ -10,13 +11,6 @@ const COUNTRY_STATE: Record<string, string[]> = {
   USA: ["California", "New York", "Texas", "Florida", "Washington"],
   Nepal: ["Bagmati", "Gandaki", "Koshi", "Lumbini", "Madhesh", "Karnali", "Sudurpashchim"],
 };
-
-// ✅ Change this:
-// - Web dev: "http://localhost:5000"
-// - Android emulator: "http://10.0.2.2:5000"
-// - iOS simulator: "http://localhost:5000"
-// - Physical phone: "http://YOUR_LAPTOP_IP:5000" (same Wi-Fi)
-const API_BASE_URL = "http://localhost:5001";
 
 export default function RegisterScreen() {
   // form state
